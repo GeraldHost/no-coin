@@ -1,6 +1,8 @@
 package nocoin
 
-import "flag"
+import (
+	"flag"
+)
 
 type config struct {
   port string
@@ -17,5 +19,6 @@ func Start() {
   config := parseFlags()
   node := Node { ID: "JAKE", port: config.port }
   node.DiscoverAndConnect()
+  go StartConsole()
   node.Serve()
 }
