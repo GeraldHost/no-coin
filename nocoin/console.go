@@ -1,21 +1,26 @@
 package nocoin
 
 import (
-  "fmt"
-  "bufio"
-  "os"
-  "strings"
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
 )
 
-func StartConsole() {
-  reader := bufio.NewReader(os.Stdin);
-  for {
-    fmt.Printf("%s ", ">")
-    text, _ := reader.ReadString('\n')
-    if strings.TrimSpace(text) == "exit" {
-      fmt.Println("Closing input channel")
-      return
-    }
-    fmt.Printf("Input :: %s", text)
-  }
+func StartConsole(node *Node) {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Printf("%s ", ">")
+		text, _ := reader.ReadString('\n')
+		text = strings.TrimSpace(text)
+
+		if text == "exit" {
+			fmt.Println("Closing input channel")
+			os.Exit(0)
+		} else if text[0] == 'B' {
+			node.Broadcast(text)
+		}
+
+		fmt.Printf("Input :: %s \n", text)
+	}
 }
