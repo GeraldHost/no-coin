@@ -1,4 +1,4 @@
-# no-coin
+# No Coin
 
 Attempt to learn more about crypto by building my own implementation
 
