@@ -4,6 +4,10 @@ import (
 	"flag"
 )
 
+// Global state
+var txPool map[string]*Tx
+var seeds []string = []string{"localhost:3001", "localhost:3002"}
+
 type config struct {
 	port string
 }

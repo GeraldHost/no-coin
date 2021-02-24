@@ -22,6 +22,7 @@ which becomes the new output.
 
 # References
 
+- Bitcoin original code :: [link](https://github.com/bitcoin/bitcoin/tree/4405b78d6059e536c36974088a8ed4d9f0f29898)
 - Proof of Work :: [link](https://medium.com/blockchaintechnologies/blockchain-mechanics-proof-of-work-75f5df8c1c35)
 - Digital signing :: [link](https://en.wikipedia.org/wiki/Digital_signature)
 - What a block is made up of :: [link](https://learnmeabitcoin.com/technical/blkdat)
