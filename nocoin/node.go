@@ -10,8 +10,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var seeds []string = []string{"localhost:3001", "localhost:3002"}
-
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -22,19 +20,19 @@ type Node struct {
 	Id                   string
 	port                 string
 	outbound_connections map[string]*Connection
-  inbound_connections  map[string]*Connection
+	inbound_connections  map[string]*Connection
 }
 
 func (node *Node) Connections() map[string]*Connection {
-  connections := node.inbound_connections
-  for addr, connection := range node.outbound_connections {
-    connections[addr] = connection
-  }
-  return connections
+	connections := node.inbound_connections
+	for addr, connection := range node.outbound_connections {
+		connections[addr] = connection
+	}
+	return connections
 }
 
 func (node *Node) Broadcast(msg string) {
-  for _, connection := range node.Connections() {
+	for _, connection := range node.Connections() {
 		connection.Send(msg)
 	}
 }
@@ -79,8 +77,8 @@ func (node *Node) HandleConn(res http.ResponseWriter, req *http.Request) {
 	node.WelcomeMessage(conn)
 
 	node.Lock()
-  addr := conn.RemoteAddr().String()
-  node.inbound_connections[addr] = &Connection { conn }
+	addr := conn.RemoteAddr().String()
+	node.inbound_connections[addr] = &Connection{conn}
 	node.Unlock()
 
 	for {
