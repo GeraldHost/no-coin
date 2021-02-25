@@ -20,7 +20,7 @@ The idea is to try and copy as many ideas from Bitcoin and Ethereum. It would be
 to run dapps in a WASM runtime? These dapps would basically be state reducers in that they take an input, modify the dapp state
 which becomes the new output.
 
-## TXs
+## TXs
 
 3 types of transactions
 
