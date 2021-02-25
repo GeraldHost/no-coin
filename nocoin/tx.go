@@ -1,9 +1,13 @@
 package nocoin
 
+import (
+  "log"
+)
+
 // Take a byte array and generates a TX structure
 // shape of broadcast transaction is:
-// <sig><sender:pubkey<recv:addr><vin>
-func GenerateTxFromBytes(bytes []byte) *Tx {}
+// <sig><sender:pubkey><recv:addr><vin>
+// func GenerateTxFromBytes(bytes []byte) *Tx {}
 
 // shape of transaction is:
 // <sig><sender:pubkey><recv:addr><vin><payload><vout><fnRet>
@@ -25,11 +29,11 @@ type Tx struct {
 // there is only 1 reward of the entire market cap for the first mined
 // block in nocoin
 func (tx *Tx) isCoinBase() bool {
-  return tx.in == 0 
+  return false
 }
 
 func (tx *Tx) getHash() string {
-  return 
+  return "empty"
 }
 
 func (tx *Tx) AddToMemPool() {
@@ -40,14 +44,14 @@ func (tx *Tx) AddToMemPool() {
 func (tx *Tx) RemoveFromMemPool() {
   hash := tx.getHash()
   if _, ok := txPool[hash]; ok {
-    delete(txPool, hash);
+    delete(txPool, hash)
   }
 }
 
 func (tx *Tx) ValidateTx() bool {
-  if tx.isCoinBase() && latestBlockHeight !== 0 {
+  if tx.isCoinBase() && latestBlockHeight != 0 {
     log.Printf("Coin base transaction only valid in block height: 0\n")
-    return
+    return false
   }
   // check transaction inputs
   // checkout outputs
