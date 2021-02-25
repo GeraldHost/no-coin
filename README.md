@@ -20,6 +20,30 @@ The idea is to try and copy as many ideas from Bitcoin and Ethereum. It would be
 to run dapps in a WASM runtime? These dapps would basically be state reducers in that they take an input, modify the dapp state
 which becomes the new output.
 
+## TXs
+
+3 types of transactions
+
+TX credit transfer: 
+UTXOs in
+UTXOs out
+
+TX function deploy: 
+code in
+UTXOs in <- TX fee
+UTXOs out
+
+TX function call: 
+args in
+previous return in
+credit limit <- gas limit
+UTXOs in <- TX fee
+UTXOs out
+return out
+
+UXTO pool
+Function return pool
+
 # References
 
 - Bitcoin original code :: [link](https://github.com/bitcoin/bitcoin/tree/4405b78d6059e536c36974088a8ed4d9f0f29898)
