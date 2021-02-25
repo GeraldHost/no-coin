@@ -27,8 +27,8 @@ func StartConsole(node *Node) {
 
 func generateAddress() {
 	addr := &Addr{}
-	addr.loadFromFile() 
-	
+	addr.loadFromFile()
+
 	str := addr.pubKeyToHexStr()
 
 	fmt.Printf("Hex: %s\n", str)
