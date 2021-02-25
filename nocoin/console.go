@@ -24,3 +24,12 @@ func StartConsole(node *Node) {
 		fmt.Printf("Input :: %s \n", text)
 	}
 }
+
+func generateAddress() {
+	addr := &Addr{}
+	addr.loadFromFile() 
+	
+	str := addr.pubKeyToHexStr()
+
+	fmt.Printf("Hex: %s\n", str)
+}
