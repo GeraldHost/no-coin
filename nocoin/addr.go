@@ -15,6 +15,19 @@ import (
 
 var curve elliptic.Curve = elliptic.P256()
 
+// Address are going to basically just be hashes of public
+// keys. When we send money to a hash we are actually just
+// creating an output that can be spent by somebody who has
+// a valid public key that hashes into the same address hash
+// used in the previous output.
+//
+// We use ecdsa which is just a digital signature algo. That allows
+// use to sign and verify requests with public and private keys.
+// We can generate pub/priv keys by calling addr.generate(). The keys
+// are stored locally on disk in public.pem and private.pem
+//
+// Public keys are stored as PEM encoded but they are sent in a
+// transaction compressed as a hex string.
 type Addr struct {
 	pem    string
 	pemPub string
@@ -33,13 +46,19 @@ func (addr *Addr) generate() {
 	savePem(addr.pem, addr.pemPub)
 }
 
+// Convert pem encoded public key to hex string
 func (addr *Addr) pubKeyToHexStr() string {
 	_, publicKey := decodePem(addr.pem, addr.pemPub)
 	bytes := elliptic.MarshalCompressed(curve, publicKey.X, publicKey.Y)
 	return hex.EncodeToString(bytes)
 }
 
-// func (addr *Addr) pubKeyHash() string {}
+// Convert hex encoded public key to SHA256 hash
+func (addr *Addr) pubKeyHash() string {
+	pubKeyStr := addr.pubKeyToHexStr()
+	hash := sha256.Sum256([]byte(pubKeyStr))
+	return string(hash[:])
+}
 
 func (addr *Addr) loadFromFile() {
 	pub_data, err := ioutil.ReadFile("public.pem")
@@ -69,6 +88,7 @@ func verifyPublicKey(publicKey *ecdsa.PublicKey, hash, sig []byte) bool {
     return valid
 }
 
+// Convert hex string encoded public key to ecdsa public key
 func hexStrToPubKey(str string) *ecdsa.PublicKey {
 	bytes, _ := hex.DecodeString(str)
 	X, Y := elliptic.UnmarshalCompressed(curve, bytes)

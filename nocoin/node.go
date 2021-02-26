@@ -23,6 +23,7 @@ type Node struct {
 	inbound_connections  map[string]*Connection
 }
 
+// Get outbound and inbound connections to nodes
 func (node *Node) Connections() map[string]*Connection {
 	connections := node.inbound_connections
 	for addr, connection := range node.outbound_connections {
@@ -40,6 +41,7 @@ func (node *Node) Broadcast(msg string) {
 // remove closed connections
 // func (node *Node) Prune() {}
 
+// Connect over websockets to a single node
 func (node *Node) ConnectToNode(host string) {
 	u := url.URL{Scheme: "ws", Host: host, Path: "/"}
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -62,6 +64,8 @@ func (node *Node) DiscoverAndConnect() {
 	}
 }
 
+// When we create a connection we send a welcome message
+// to the connecting node with our ID
 func (node *Node) WelcomeMessage(conn *websocket.Conn) {
 	msg := fmt.Sprintf("Welcome :: %s", node.Id)
 	conn.WriteMessage(websocket.TextMessage, []byte(msg))
@@ -77,11 +81,14 @@ func (node *Node) HandleConn(res http.ResponseWriter, req *http.Request) {
 	node.WelcomeMessage(conn)
 
 	node.Lock()
+	// add connection to our inbound connection pool
 	addr := conn.RemoteAddr().String()
 	node.inbound_connections[addr] = &Connection{conn}
 	node.Unlock()
 
 	for {
+		// Recieve a message from a node.
+		// TODO: implement a way of effeciently parsing these recieved messages
 		_, msg, err := conn.ReadMessage()
 		log.Printf("%sRecieved: %s", TERMINAL_CLEAR_LINE, msg)
 		if err != nil {

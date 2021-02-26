@@ -6,7 +6,11 @@ import (
 
 // Global state
 var txPool map[string]*Tx
+
+// Hard coded seeds for the node to make initial connection with
 var seeds []string = []string{"localhost:3001", "localhost:3002"}
+
+// tracks the latest block height as we sync
 var latestBlockHeight int = 0
 
 type config struct {
