@@ -64,7 +64,10 @@ func (addr *Addr) sign(hash [sha256.Size]byte) ([]byte, error) {
 	return sig, err
 }
 
-// func (addr *Addr) verify() {}
+func verifyPublicKey(publicKey *ecdsa.PublicKey, hash, sig []byte) bool {
+    valid := ecdsa.VerifyASN1(publicKey, hash[:], sig)
+    return valid
+}
 
 func hexStrToPubKey(str string) *ecdsa.PublicKey {
 	bytes, _ := hex.DecodeString(str)

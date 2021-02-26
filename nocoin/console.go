@@ -19,17 +19,15 @@ func StartConsole(node *Node) {
 			os.Exit(0)
 		} else if text[0] == 'B' {
 			node.Broadcast(text)
+		} else if text == "generate address" {
+			generateAddress()
 		}
-
-		fmt.Printf("Input :: %s \n", text)
 	}
 }
 
 func generateAddress() {
 	addr := &Addr{}
 	addr.loadFromFile()
-
 	str := addr.pubKeyToHexStr()
-
-	fmt.Printf("Hex: %s\n", str)
+	fmt.Printf("Public Key :: %s \n", str)
 }
