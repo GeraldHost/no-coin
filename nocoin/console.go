@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+// Commands
+// generate address
+// transfer <amount> <addr>
+// deploy <asm_path>
+// call <args> <fn:addr> <limit>
+
 func StartConsole(node *Node) {
 	reader := bufio.NewReader(os.Stdin)
 	for {

@@ -2,6 +2,8 @@ package nocoin
 
 import (
 	"log"
+	"strings"
+	"strconv"
 )
 
 var marketCap int64 = 9223372036854775807
@@ -11,8 +13,39 @@ var marketCap int64 = 9223372036854775807
 // <sig><sender:pubkey><recv:addr><vin>
 // func GenerateTxFromBytes(bytes []byte) *Tx {}
 
-// shape of transaction is:
-// <sig><sender:pubkey><recv:addr><vin><payload><vout><fnRet>
+// Generate a transfer TX from a string input
+// Example:
+// <amount> <recv:addr>
+// eg: 20 D80C9BF910F144738EF983724BC04BD6BD3F17C5C83ED57BEDEE1B1B9278E811
+func GenerateTransferTxFromString(input string) *Tx {
+	parts := strings.Split(" ", input)
+	if len(parts) > 2 {
+		log.Print("Too many inputs. Expect format <amount> <addr>")
+		return
+	}
+	amount, err := strconv.Atoi(parts[0])
+	if err != nil {
+		log.Print("First input must be a number")
+		return
+	}
+	addr := parts[1]
+
+	tx := &Tx{}
+	tx.BuildTransfer(amount, addr)
+	return tx
+}
+
+// There are three types of transaction:
+// - TX transfer
+// - TX function deploy 
+// - TX function call
+//
+// shape of transaction is something like:
+// TX: 		<sig><sender:pubkey><recv:addr><vin><payload><vout><fnRet>
+// VIN:		[]<sender:addr><amount>
+// VOUT:	[]<recv:addr><amount>
+// PAYLOAD:	[]<args>
+// fnRet:	<value> (format::json)
 type Tx struct {
 	// TX value input
 	vin []byte
@@ -66,3 +99,10 @@ func (tx *Tx) ValidateTx() bool {
 	// validate sigs and pub keys
 	return false
 }
+
+// Build the transfer TX
+// Based on an amount and addr we dip into the UXTO pool and find transactions
+// that we are able to spend which will form our VIN. Then we will contruct
+// out VOUT based on the address we are sending to and if we need to send back 
+// some change
+func (tx *Tx) BuildTransfer(amount int, addr string) {}
