@@ -47,20 +47,24 @@ func (addr *Addr) generate() {
 }
 
 // Convert pem encoded public key to hex string
-func (addr *Addr) pubKeyToHexStr() string {
+func (addr *Addr) PubKeyToHexStr() string {
 	_, publicKey := decodePem(addr.pem, addr.pemPub)
 	bytes := elliptic.MarshalCompressed(curve, publicKey.X, publicKey.Y)
 	return hex.EncodeToString(bytes)
 }
 
+func (addr *Addr) Get() string {
+	return add.pubKeyHash()
+}
+
 // Convert hex encoded public key to SHA256 hash
-func (addr *Addr) pubKeyHash() string {
-	pubKeyStr := addr.pubKeyToHexStr()
+func (addr *Addr) PubKeyHash() string {
+	pubKeyStr := addr.PubKeyToHexStr()
 	hash := sha256.Sum256([]byte(pubKeyStr))
 	return string(hash[:])
 }
 
-func (addr *Addr) loadFromFile() {
+func (addr *Addr) LoadFromFile() {
 	pub_data, err := ioutil.ReadFile("public.pem")
 	if err != nil {
 		log.Print("Unable to read file public.pem")
@@ -77,7 +81,7 @@ func (addr *Addr) loadFromFile() {
 	addr.pemPub = string(pub_data)
 }
 
-func (addr *Addr) sign(hash [sha256.Size]byte) ([]byte, error) {
+func (addr *Addr) Sign(hash [sha256.Size]byte) ([]byte, error) {
 	privateKey, _ := decodePem(addr.pem, addr.pemPub)
 	sig, err := ecdsa.SignASN1(rand.Reader, privateKey, hash[:])
 	return sig, err

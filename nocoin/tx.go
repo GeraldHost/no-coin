@@ -30,34 +30,34 @@ type Tx struct {
 // Coin base is first transaction in a block used to pay a reward
 // there is only 1 reward of the entire market cap for the first mined
 // block in nocoin int64 9223372036854775807
-func (tx *Tx) isCoinBase() bool {
+func (tx *Tx) IsCoinBase() bool {
 	return false
 }
 
 // Return the transaction hash which can be used to check validty when
 // we create our merkle tree. 
-func (tx *Tx) getHash() string {
+func (tx *Tx) GetHash() string {
 	return "empty"
 }
 
 // All transactions are kept in a memory pool until they are ready
 // to be added to a block. 
 func (tx *Tx) AddToMemPool() {
-	hash := tx.getHash()
+	hash := tx.GetHash()
 	txPool[hash] = tx
 }
 
 // Once a transaction is added to a block we pull it
 // out of the memory pull
 func (tx *Tx) RemoveFromMemPool() {
-	hash := tx.getHash()
+	hash := tx.GetHash()
 	if _, ok := txPool[hash]; ok {
 		delete(txPool, hash)
 	}
 }
 
 func (tx *Tx) ValidateTx() bool {
-	if tx.isCoinBase() && latestBlockHeight != 0 {
+	if tx.IsCoinBase() && latestBlockHeight != 0 {
 		log.Printf("Coin base transaction only valid in block height: 0\n")
 		return false
 	}

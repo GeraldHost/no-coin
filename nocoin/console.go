@@ -27,7 +27,10 @@ func StartConsole(node *Node) {
 
 func generateAddress() {
 	addr := &Addr{}
-	addr.loadFromFile()
-	str := addr.pubKeyToHexStr()
+	addr.LoadFromFile()
+	str := addr.PubKeyToHexStr()
+	address := addr.Get()
+
 	fmt.Printf("Public Key :: %s \n", str)
+	fmt.Printf("Address :: %s \n", address)
 }
