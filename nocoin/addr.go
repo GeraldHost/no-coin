@@ -9,8 +9,8 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"io/ioutil"
-	"log"
 	"os"
+	"fmt"
 )
 
 var curve elliptic.Curve = elliptic.P256()
@@ -35,7 +35,7 @@ type Addr struct {
 
 func (addr *Addr) generate() {
 	if _, err := os.Stat("private.pem"); err == nil {
-		log.Print("You are about to overwrite private.pem. You probably don't want to do that.")
+		fmt.Println("you are about to overwrite private.pem you probably don't want to do that")
 		return
 	}
 
@@ -54,31 +54,32 @@ func (addr *Addr) PubKeyToHexStr() string {
 }
 
 func (addr *Addr) Get() string {
-	return add.pubKeyHash()
+	return addr.PubKeyHash()
 }
 
 // Convert hex encoded public key to SHA256 hash
 func (addr *Addr) PubKeyHash() string {
 	pubKeyStr := addr.PubKeyToHexStr()
 	hash := sha256.Sum256([]byte(pubKeyStr))
-	return string(hash[:])
+	return fmt.Sprintf("%x", hash)
 }
 
-func (addr *Addr) LoadFromFile() {
+func (addr *Addr) LoadFromFile() bool {
 	pub_data, err := ioutil.ReadFile("public.pem")
 	if err != nil {
-		log.Print("Unable to read file public.pem")
-		return
+		fmt.Println("unable to read file public.pem")
+		return false
 	}
 
 	priv_data, err := ioutil.ReadFile("private.pem")
 	if err != nil {
-		log.Print("Unable to read file public.pem")
-		return
+		fmt.Println("unable to read file public.pem")
+		return false
 	}
 
 	addr.pem = string(priv_data)
 	addr.pemPub = string(pub_data)
+	return true
 }
 
 func (addr *Addr) Sign(hash [sha256.Size]byte) ([]byte, error) {
@@ -103,7 +104,7 @@ func savePem(pem, pemPub string) {
 	// Save private key
 	f_priv, err := os.Create("private.pem")
 	if err != nil {
-		log.Print("Unable to create private.pem")
+		fmt.Println("unable to create private.pem")
 		return
 	}
 	defer f_priv.Close()
@@ -113,7 +114,7 @@ func savePem(pem, pemPub string) {
 	// Save public key
 	f_pub, err := os.Create("public.pem")
 	if err != nil {
-		log.Print("Unable to create public.pem")
+		fmt.Println("unable to create public.pem")
 		return
 	}
 	defer f_pub.Close()

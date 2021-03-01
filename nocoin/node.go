@@ -23,6 +23,13 @@ type Node struct {
 	inbound_connections  map[string]*Connection
 }
 
+func NewNode(id string, port string) Node {
+	node := Node{Id: id, port: port}
+	node.outbound_connections = make(map[string]*Connection)
+	node.inbound_connections = make(map[string]*Connection)
+	return node
+}
+
 // Get outbound and inbound connections to nodes
 func (node *Node) Connections() map[string]*Connection {
 	connections := node.inbound_connections
