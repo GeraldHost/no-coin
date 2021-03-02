@@ -4,6 +4,8 @@ import (
 	"log"
 )
 
+// func TxFromString(txStr string) *Tx {}
+
 // Take a byte array and generates a TX structure
 // shape of broadcast transaction is:
 // <sig><sender:pubkey><recv:addr><vin>

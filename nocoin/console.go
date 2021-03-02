@@ -32,8 +32,8 @@ func StartConsole(node *Node) {
 		} else if text == "my address" {
 			myAddress()
 		} else if mnemonics[0] == "transfer" {
-			transferStr := transfer(mnemonics)
-			node.Broadcast(fmt.Sprintf("TRANSFER %s", transferStr))
+			txStr := transfer(mnemonics)
+			node.Broadcast(fmt.Sprintf("TRANSFER %s", txStr))
 		}
 	}
 }
@@ -51,7 +51,7 @@ func myAddress() {
 // Return vin and vout for transaction
 // <vin> <amount><address>
 // <vout> <amount><address>
-func vinVout(amount int, addr string) (string, int, string, int) {
+func vinVout(amount int, addr string) (int, string, int, string) {
 	vin := ""
 	utxos, sum := FindInUtxoPoolSumValue(myAddr.Get(), amount)
 	for _, utxo := range utxos {
@@ -59,15 +59,17 @@ func vinVout(amount int, addr string) (string, int, string, int) {
 		vin += inAmount + utxo.addr
 	}
 	vout := EncodeVarInt(amount) + addr
-	change := ""
+	
+	var change string
 	if sum > amount {
 		// The sum of utxos is greater than the amount so we need some change
 		changeAmount := EncodeVarInt(sum - amount)
-		change += changeAmount + myAddr.Get()
+		change = changeAmount + myAddr.Get()
 	}
 	voutCount := 2
 	vinCount := len(utxos)
-	return vin, vinCount, vout + change, voutCount
+	
+	return vinCount, vin, voutCount, vout + change
 }
 
 // Generate a transfer TX from a string input
@@ -84,7 +86,7 @@ func transfer(mnemonics []string) string {
 		return ""
 	}
 	addr := mnemonics[2]
-	vin, vinCount, vout, voutCount := vinVout(amount, addr)
-	transferStr := EncodeVarInt(vinCount) + vin + EncodeVarInt(voutCount) + vout
-	return transferStr
+	vinCount, vin, voutCount, vout := vinVout(amount, addr)
+	txStr := EncodeVarInt(vinCount) + vin + EncodeVarInt(voutCount) + vout
+	return txStr
 }

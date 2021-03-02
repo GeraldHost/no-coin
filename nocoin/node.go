@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -53,7 +54,7 @@ func (node *Node) ConnectToNode(host string) {
 	u := url.URL{Scheme: "ws", Host: host, Path: "/"}
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		log.Printf("Error connecting to node :: %s", err)
+		fmt.Printf("Error connecting to node :: %s\n", host)
 		return
 	}
 	node.Lock()
@@ -81,7 +82,7 @@ func (node *Node) WelcomeMessage(conn *websocket.Conn) {
 func (node *Node) HandleConn(res http.ResponseWriter, req *http.Request) {
 	conn, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		log.Println(err)
+		fmt.Println("failed to upgrade connection to websocket")
 		return
 	}
 
@@ -94,15 +95,34 @@ func (node *Node) HandleConn(res http.ResponseWriter, req *http.Request) {
 	node.Unlock()
 
 	for {
-		// Recieve a message from a node.
-		// TODO: implement a way of effeciently parsing these recieved messages
-		_, msg, err := conn.ReadMessage()
-		log.Printf("%sRecieved: %s", TERMINAL_CLEAR_LINE, msg)
+		// Process incoming messages from connected nodes
+		_, input, err := conn.ReadMessage()
 		if err != nil {
-			log.Println(err)
+			fmt.Println("failed to read message from connection")
 			return
 		}
+		node.Process(string(input))
 	}
+}
+
+func (node *Node) Process(input string) {
+	mnemonics := strings.Split(input, " ")
+	action := mnemonics[0]
+	fmt.Printf("%srecieved: %s", TERMINAL_CLEAR_LINE, action)
+	switch action {
+	case "TRANSFER":
+		node.ProcessTransfer(mnemonics[1])
+	case "DEPLOY":
+		// TODO:
+	case "CALL":
+		// TODO:
+	}
+}
+
+func (node *Node) ProcessTransfer(txStr string) {
+	// Build TX from txStr
+	// validate TX
+	// put TX into mem pool
 }
 
 func (node *Node) Serve() {
