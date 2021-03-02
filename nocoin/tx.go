@@ -17,7 +17,6 @@ func TxPartsFromReader(r *bytes.Buffer) []*TxPart {
 			amount, _ = BytesToInt(maybePrefix)
 		}
 		addr := string(r.Next(addrLength))
-
 		txPart := &TxPart{ amount: int(amount), addr: addr }
 		txParts = append(txParts, txPart)	
 	}
@@ -34,7 +33,6 @@ func TxFromString(txStr string) *Tx {
 // Return vin and vout for transaction
 // <vin> <amount><address>
 // <vout> <amount><address>
-// TODO move to tx.go
 func NewTxTransfer(amount int, addr string) *Tx {
 	myAddrAddr := myAddr.Get()
 	vin := make([]*TxPart, 0)
@@ -90,8 +88,8 @@ type Tx struct {
 // Return the transaction hash which can be used to check validty when
 // we create our merkle tree.
 func (tx *Tx) Hash() string {
-	// TODO:
-	return "empty"
+	txStr := tx.String()
+	return fmt.Sprintf("%X", sha256.Sum256([]byte(txStr)))
 }
 
 // All transactions are kept in a memory pool until they are ready
