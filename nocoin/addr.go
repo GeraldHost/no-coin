@@ -8,14 +8,15 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 	"os"
-	"fmt"
 )
 
 var curve elliptic.Curve = elliptic.P256()
 
 var addrLength int = 64
+
 // Address are going to basically just be hashes of public
 // keys. When we send money to a hash we are actually just
 // creating an output that can be spent by somebody who has
@@ -90,8 +91,8 @@ func (addr *Addr) Sign(hash [sha256.Size]byte) ([]byte, error) {
 }
 
 func verifyPublicKey(publicKey *ecdsa.PublicKey, hash, sig []byte) bool {
-    valid := ecdsa.VerifyASN1(publicKey, hash[:], sig)
-    return valid
+	valid := ecdsa.VerifyASN1(publicKey, hash[:], sig)
+	return valid
 }
 
 // Convert hex string encoded public key to ecdsa public key

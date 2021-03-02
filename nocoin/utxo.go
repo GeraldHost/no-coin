@@ -28,6 +28,6 @@ func FindInUtxoPoolSumValue(addr string, amount int) ([]*Utxo, int) {
 }
 
 type Utxo struct {
-	addr string
+	addr   string
 	amount int
 }

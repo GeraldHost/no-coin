@@ -1,13 +1,13 @@
 package nocoin
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
-	"sync"
 	"strings"
-	"bytes"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )

@@ -3,10 +3,10 @@ package nocoin
 import (
 	"bufio"
 	"fmt"
-	"os"
-	"strings"
 	"log"
+	"os"
 	"strconv"
+	"strings"
 )
 
 // Commands
@@ -59,7 +59,7 @@ func vinVout(amount int, addr string) (int, string, int, string) {
 		vin += inAmount + utxo.addr
 	}
 	vout := EncodeVarInt(amount) + addr
-	
+
 	var change string
 	if sum > amount {
 		// The sum of utxos is greater than the amount so we need some change
@@ -68,7 +68,7 @@ func vinVout(amount int, addr string) (int, string, int, string) {
 	}
 	voutCount := 2
 	vinCount := len(utxos)
-	
+
 	return vinCount, vin, voutCount, vout + change
 }
 
@@ -79,7 +79,7 @@ func transfer(mnemonics []string) string {
 	if len(mnemonics) > 3 || len(mnemonics) < 3 {
 		log.Print("wrong number of inputs expect format <amount> <addr>")
 		return ""
-	}	
+	}
 	amount, err := strconv.Atoi(mnemonics[1])
 	if err != nil {
 		log.Print("first input must be a number")

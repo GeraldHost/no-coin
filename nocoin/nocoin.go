@@ -58,7 +58,7 @@ func SetupAddr() {
 // transfer value between miners and users
 func SetupVendor() {
 	vendorAddr := "4d265138333dfdfa3b22454fd654e581052688b8a3592dd4306e1426f4bbc6ed"
-	utxo := &Utxo { addr: vendorAddr, amount: marketCap }
+	utxo := &Utxo{addr: vendorAddr, amount: marketCap}
 	AddToUtxoPool(utxo)
 }
 

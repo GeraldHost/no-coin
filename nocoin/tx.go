@@ -13,7 +13,7 @@ import (
 
 // There are three types of transaction:
 // - TX transfer
-// - TX function deploy 
+// - TX function deploy
 // - TX function call
 //
 // shape of transaction is something like:
@@ -26,7 +26,7 @@ type Tx struct {
 	// TX value input
 	vin string
 
-  // TX value output (must match input in value)
+	// TX value output (must match input in value)
 	vout string
 
 	// Payload to be sent in if this TX is a function call
@@ -45,14 +45,14 @@ func (tx *Tx) IsCoinBase() bool {
 }
 
 // Return the transaction hash which can be used to check validty when
-// we create our merkle tree. 
+// we create our merkle tree.
 func (tx *Tx) Hash() string {
 	// TODO:
 	return "empty"
 }
 
 // All transactions are kept in a memory pool until they are ready
-// to be added to a block. 
+// to be added to a block.
 func (tx *Tx) AddToMemPool() {
 	hash := tx.Hash()
 	txPool[hash] = tx
@@ -82,14 +82,14 @@ func (tx *Tx) ValidateTx() bool {
 // Build the transfer TX
 // Based on an amount and addr we dip into the UXTO pool and find transactions
 // that we are able to spend which will form our VIN. Then we will contruct
-// out VOUT based on the address we are sending to and if we need to send back 
+// out VOUT based on the address we are sending to and if we need to send back
 // some change
 // func BuildTransfer(amount int, recvAddr string) *Tx {
-	// TODO:
-	// <sig><me:pubkey><vin:hex><vout:hex>
-	// myUtxos := FindInUxtoPoolSumValue(myAddr.Get(), amount)
-	// inputs := make([]string, 0)
-	// for uxto := range myUtxos {
-	// 	inputs = append(inputs, fmt.Sprintf("%x%x", uxto.addr, uxto.amount))
-	// }
+// TODO:
+// <sig><me:pubkey><vin:hex><vout:hex>
+// myUtxos := FindInUxtoPoolSumValue(myAddr.Get(), amount)
+// inputs := make([]string, 0)
+// for uxto := range myUtxos {
+// 	inputs = append(inputs, fmt.Sprintf("%x%x", uxto.addr, uxto.amount))
+// }
 // }
