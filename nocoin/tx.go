@@ -1,10 +1,35 @@
 package nocoin
 
 import (
-	"log"
+	"fmt"
+	"bytes"
 )
 
-// func TxFromString(txStr string) *Tx {}
+func TxPartsFromReader(r *bytes.Buffer) []*TxPart {
+	txParts := make([]*TxPart, 0)
+	count, _ := BytesToInt(r.Next(2))
+	for i := 0; i < int(count); i++ {
+		maybePrefix := r.Next(2)
+		var amount int64
+		if n, ok := varIntPrefixes[string(maybePrefix)]; ok {
+			amount, _ = BytesToInt(r.Next(n))
+		} else {
+			amount, _ = BytesToInt(maybePrefix)
+		}
+		addr := string(r.Next(addrLength))
+
+		txPart := &TxPart{ amount: int(amount), addr: addr }
+		txParts = append(txParts, txPart)	
+	}
+	return txParts
+}
+
+func TxFromString(txStr string) *Tx {
+	r := bytes.NewBuffer([]byte(txStr))
+	vin := TxPartsFromReader(r)
+	vout := TxPartsFromReader(r)
+	return &Tx { vin: vin, vout: vout }
+}
 
 // Return vin and vout for transaction
 // <vin> <amount><address>
@@ -28,7 +53,7 @@ func NewTxTransfer(amount int, addr string) *Tx {
 		vout = append(vout, &TxPart{ amount: change, addr: myAddrAddr })
 	}
 
-	tx := &Tx { vin: vin, vout: vout, amount: amount, addr: addr }
+	tx := &Tx { vin: vin, vout: vout }
 	return tx
 }
 
@@ -60,20 +85,6 @@ type Tx struct {
 
 	// Return value from function call
 	fnRet []byte
-
-	// amount to transfer
-	amount int
-
-	// address to transfer amount to OR address of contract
-	addr string
-}
-
-// Coin base is first transaction in a block used to pay a reward
-// there is only 1 reward of the entire market cap for the first mined
-// block in nocoin int64 9223372036854775807
-func (tx *Tx) IsCoinBase() bool {
-	// TODO:
-	return false
 }
 
 // Return the transaction hash which can be used to check validty when
@@ -99,12 +110,18 @@ func (tx *Tx) RemoveFromMemPool() {
 	}
 }
 
-func (tx *Tx) ValidateTx() bool {
-	if tx.IsCoinBase() && latestBlockHeight != 0 {
-		log.Printf("coin base transaction only valid in block height: 0\n")
-		return false
+// TODO:
+func (tx *Tx) Validate() bool {
+	sum := func(txParts []*TxPart) int {
+		s := 0
+		for _, txP := range txParts {
+			s += txP.amount
+		}
+		return s
 	}
-	// TODO:
+	vinSum := sum(tx.vin)
+	voutSum := sum(tx.vout)
+	fmt.Println(vinSum, voutSum, vinSum == voutSum)
 	// check transaction inputs
 	// checkout outputs
 	// validate sigs and pub keys

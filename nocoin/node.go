@@ -1,7 +1,6 @@
 package nocoin
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"net/http"
@@ -123,28 +122,12 @@ func (node *Node) Process(input string) {
 
 func (node *Node) ProcessTransfer(txStr string) {
 	// Build TX from txStr
-	r := bytes.NewBuffer([]byte(txStr))
-	// 2 loops, first to read VIN then to read VOUT
-	// Format: <count><amount><addr>
-	for i := 0; i < 2; i++ {
-		count, _ := BytesToInt(r.Next(2))
-		for i := 0; i < int(count); i++ {
-			maybePrefix := r.Next(2)
-			var amount int64
-			if n, ok := varIntPrefixes[string(maybePrefix)]; ok {
-				amount, _ = BytesToInt(r.Next(n))
-			} else {
-				amount, _ = BytesToInt(maybePrefix)
-			}
-			addr := string(r.Next(addrLength))
-
-			fmt.Println("<amount><addr>", amount, addr)
-		}
+	tx := TxFromString(txStr)
+	// validate TX
+	if valid := tx.Validate(); valid {
+		tx.AddToMemPool()
 	}
 
-	// TODO:
-	// validate TX
-	// put TX into mem pool
 }
 
 func (node *Node) Serve() {
