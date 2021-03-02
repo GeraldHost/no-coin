@@ -121,9 +121,11 @@ func (tx *Tx) Validate() bool {
 	}
 	vinSum := sum(tx.vin)
 	voutSum := sum(tx.vout)
-	fmt.Println(vinSum, voutSum, vinSum == voutSum)
-	// check transaction inputs
-	// checkout outputs
+	if vinSum != voutSum {
+		// input does not equal output
+		return false
+	}
+	// check utxo exist in pool
 	// validate sigs and pub keys
 	return false
 }

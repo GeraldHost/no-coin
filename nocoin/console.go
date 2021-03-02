@@ -27,10 +27,10 @@ func StartConsole(node *Node) {
 		if text == "exit" {
 			fmt.Println("closing input channel")
 			os.Exit(0)
-		} else if text[0] == 'B' {
-			node.Broadcast(text)
 		} else if text == "my address" {
-			myAddress()
+			pubStr, addr := myAddress()
+			fmt.Printf("Public Key :: %s \n", pubStr)
+			fmt.Printf("Address :: %s \n", addr)
 		} else if mnemonics[0] == "transfer" {
 			txStr := transfer(mnemonics)
 			node.Broadcast(fmt.Sprintf("TRANSFER %s", txStr))
@@ -38,14 +38,11 @@ func StartConsole(node *Node) {
 	}
 }
 
+// Get your address and public key from file
 func myAddress() {
 	addr := &Addr{}
 	addr.LoadFromFile()
-	str := addr.PubKeyToHexStr()
-	address := addr.Get()
-
-	fmt.Printf("Public Key :: %s \n", str)
-	fmt.Printf("Address :: %s \n", address)
+	return addr.PubKeyToHexStr(), addr.Get()
 }
 
 // Generate a transfer TX from a string input

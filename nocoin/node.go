@@ -127,7 +127,6 @@ func (node *Node) ProcessTransfer(txStr string) {
 	if valid := tx.Validate(); valid {
 		tx.AddToMemPool()
 	}
-
 }
 
 func (node *Node) Serve() {
