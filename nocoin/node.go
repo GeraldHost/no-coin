@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"sync"
 	"strings"
+	"bytes"
 
 	"github.com/gorilla/websocket"
 )
@@ -54,9 +55,10 @@ func (node *Node) ConnectToNode(host string) {
 	u := url.URL{Scheme: "ws", Host: host, Path: "/"}
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		fmt.Printf("Error connecting to node :: %s\n", host)
+		fmt.Printf("error connecting to node :: %s\n", host)
 		return
 	}
+	fmt.Printf("successfully connected to node :: %s\n", host)
 	node.Lock()
 	defer node.Unlock()
 	connection := &Connection{conn}
@@ -108,7 +110,7 @@ func (node *Node) HandleConn(res http.ResponseWriter, req *http.Request) {
 func (node *Node) Process(input string) {
 	mnemonics := strings.Split(input, " ")
 	action := mnemonics[0]
-	fmt.Printf("%srecieved: %s", TERMINAL_CLEAR_LINE, action)
+	fmt.Printf("%srecieved: %s\n", TERMINAL_CLEAR_LINE, action)
 	switch action {
 	case "TRANSFER":
 		node.ProcessTransfer(mnemonics[1])
@@ -121,6 +123,26 @@ func (node *Node) Process(input string) {
 
 func (node *Node) ProcessTransfer(txStr string) {
 	// Build TX from txStr
+	// // VIN
+	r := bytes.NewBuffer([]byte(txStr))
+	// 2 loops, first to read VIN then to read VOUT
+	for i := 0; i < 2; i++ {
+		count, _ := BytesToInt(r.Next(2))
+		for i := 0; i < int(count); i++ {
+			maybePrefix := r.Next(2)
+			var amount int64
+			if n, ok := varIntPrefixes[string(maybePrefix)]; ok {
+				amount, _ = BytesToInt(r.Next(n))
+			} else {
+				amount, _ = BytesToInt(maybePrefix)
+			}
+			addr := string(r.Next(addrLength))
+
+			fmt.Println("<amount><addr>", amount, addr)
+		}
+	}
+
+	// TODO:
 	// validate TX
 	// put TX into mem pool
 }

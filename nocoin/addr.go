@@ -15,6 +15,7 @@ import (
 
 var curve elliptic.Curve = elliptic.P256()
 
+var addrLength int = 64
 // Address are going to basically just be hashes of public
 // keys. When we send money to a hash we are actually just
 // creating an output that can be spent by somebody who has
