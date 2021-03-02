@@ -48,30 +48,6 @@ func myAddress() {
 	fmt.Printf("Address :: %s \n", address)
 }
 
-// Return vin and vout for transaction
-// <vin> <amount><address>
-// <vout> <amount><address>
-func vinVout(amount int, addr string) (int, string, int, string) {
-	vin := ""
-	utxos, sum := FindInUtxoPoolSumValue(myAddr.Get(), amount)
-	for _, utxo := range utxos {
-		inAmount := EncodeVarInt(utxo.amount)
-		vin += inAmount + utxo.addr
-	}
-	vout := EncodeVarInt(amount) + addr
-
-	var change string
-	if sum > amount {
-		// The sum of utxos is greater than the amount so we need some change
-		changeAmount := EncodeVarInt(sum - amount)
-		change = changeAmount + myAddr.Get()
-	}
-	voutCount := 2
-	vinCount := len(utxos)
-
-	return vinCount, vin, voutCount, vout + change
-}
-
 // Generate a transfer TX from a string input
 // <amount> <recv:addr>
 // eg: 20 D80C9BF910F144738EF983724BC04BD6BD3F17C5C83ED57BEDEE1B1B9278E811
@@ -86,7 +62,6 @@ func transfer(mnemonics []string) string {
 		return ""
 	}
 	addr := mnemonics[2]
-	vinCount, vin, voutCount, vout := vinVout(amount, addr)
-	txStr := EncodeVarInt(vinCount) + vin + EncodeVarInt(voutCount) + vout
-	return txStr
+	tx := NewTxTransfer(amount, addr)
+	return tx.String()
 }

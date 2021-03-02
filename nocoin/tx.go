@@ -6,6 +6,32 @@ import (
 
 // func TxFromString(txStr string) *Tx {}
 
+// Return vin and vout for transaction
+// <vin> <amount><address>
+// <vout> <amount><address>
+// TODO move to tx.go
+func NewTxTransfer(amount int, addr string) *Tx {
+	myAddrAddr := myAddr.Get()
+	vin := make([]*TxPart, 0)
+	vout := make([]*TxPart, 0)
+	// Build inputs
+	utxos, sum := FindInUtxoPoolSumValue(myAddrAddr, amount)
+	for _, utxo := range utxos {
+		vin = append(vin, &TxPart{ amount: utxo.amount, addr: utxo.addr })
+	}
+	// append transfer to vout
+	vout = append(vout, &TxPart{ amount: amount, addr: addr });
+	// check if change is required
+	if sum > amount {
+		// The sum of utxos is greater than the amount so we need some change
+		change := sum - amount
+		vout = append(vout, &TxPart{ amount: change, addr: myAddrAddr })
+	}
+
+	tx := &Tx { vin: vin, vout: vout, amount: amount, addr: addr }
+	return tx
+}
+
 // Take a byte array and generates a TX structure
 // shape of broadcast transaction is:
 // <sig><sender:pubkey><recv:addr><vin>
@@ -24,16 +50,22 @@ import (
 // fnRet:	<value> (format::json)
 type Tx struct {
 	// TX value input
-	vin string
+	vin []*TxPart
 
 	// TX value output (must match input in value)
-	vout string
+	vout []*TxPart
 
 	// Payload to be sent in if this TX is a function call
 	payload []byte
 
 	// Return value from function call
 	fnRet []byte
+
+	// amount to transfer
+	amount int
+
+	// address to transfer amount to OR address of contract
+	addr string
 }
 
 // Coin base is first transaction in a block used to pay a reward
@@ -79,17 +111,24 @@ func (tx *Tx) ValidateTx() bool {
 	return false
 }
 
-// Build the transfer TX
-// Based on an amount and addr we dip into the UXTO pool and find transactions
-// that we are able to spend which will form our VIN. Then we will contruct
-// out VOUT based on the address we are sending to and if we need to send back
-// some change
-// func BuildTransfer(amount int, recvAddr string) *Tx {
-// TODO:
-// <sig><me:pubkey><vin:hex><vout:hex>
-// myUtxos := FindInUxtoPoolSumValue(myAddr.Get(), amount)
-// inputs := make([]string, 0)
-// for uxto := range myUtxos {
-// 	inputs = append(inputs, fmt.Sprintf("%x%x", uxto.addr, uxto.amount))
-// }
-// }
+func (tx *Tx) String() string {
+	vinBytes := make([]byte, 0)
+	for _, txPart := range tx.vin {
+		vinBytes = append(vinBytes, []byte(txPart.String())...)
+	}
+	voutBytes := make([]byte, 0)
+	for _, txPart := range tx.vout {
+		voutBytes = append(voutBytes, []byte(txPart.String())...)
+	}
+	return EncodeVarInt(len(tx.vin)) + string(vinBytes) + EncodeVarInt(len(tx.vout)) + string(voutBytes)
+}
+
+
+type TxPart struct {
+	amount int
+	addr string
+}
+
+func (txP *TxPart) String() string {
+	return EncodeVarInt(txP.amount) + txP.addr
+}

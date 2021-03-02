@@ -123,9 +123,9 @@ func (node *Node) Process(input string) {
 
 func (node *Node) ProcessTransfer(txStr string) {
 	// Build TX from txStr
-	// // VIN
 	r := bytes.NewBuffer([]byte(txStr))
 	// 2 loops, first to read VIN then to read VOUT
+	// Format: <count><amount><addr>
 	for i := 0; i < 2; i++ {
 		count, _ := BytesToInt(r.Next(2))
 		for i := 0; i < int(count); i++ {
