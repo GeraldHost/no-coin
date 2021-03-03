@@ -3,6 +3,7 @@ package nocoin
 import (
 	"fmt"
 	"bytes"
+	"encoding/hex"
 )
 
 var txIdLength int = 64
@@ -123,9 +124,11 @@ func (tx *Tx) Validate(sig string) bool {
 	}
 	vinSum := sum(tx.vin)
 	voutSum := sum(tx.vout)
+	fmt.Printf("in: %d, out: %d\n", vinSum, voutSum)
 	if vinSum != voutSum {
 		// input does not equal output
 		fmt.Println("input does not equal output");
+		fmt.Printf("in: %d, out: %d\n", vinSum, voutSum)
 		return false
 	}
 	fmt.Println("inputs are valid yay!");
@@ -151,7 +154,9 @@ func (tx *Tx) Validate(sig string) bool {
 	fmt.Println("Validate sigs and pub keys");
 	// TODO: public key validation isn't working currently...
 	pubKey := hexStrToPubKey(tx.pubKeyStr)
-	if validSig := verifyPublicKey(pubKey, []byte(tx.id), []byte(sig)); !validSig {
+	fmt.Println("Pubkeystr", tx.pubKeyStr)
+	sigB, _ := hex.DecodeString(sig)
+	if validSig := verifyPublicKey(pubKey, []byte(tx.id), sigB); !validSig {
 		fmt.Println("pub key not valid");
 		return false
 	}
@@ -179,7 +184,8 @@ func (tx *Tx) SignTx() string {
 	if err != nil {
 		fmt.Println("failed to sign tx")
 	}
-	return EncodeVarInt(len(string(sig))) + string(sig) + tx.id + txStr
+	sigStr := fmt.Sprintf("%X", sig)
+	return EncodeVarInt(len(sigStr)) + sigStr + tx.id + txStr
 }
 
 type TxPart struct {

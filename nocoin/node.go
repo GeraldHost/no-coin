@@ -107,6 +107,7 @@ func (node *Node) HandleConn(res http.ResponseWriter, req *http.Request) {
 }
 
 func (node *Node) Process(input string) {
+	fmt.Println("input", input)
 	mnemonics := strings.Split(input, " ")
 	action := mnemonics[0]
 	fmt.Printf("%srecieved: %s\n", TERMINAL_CLEAR_LINE, action)
