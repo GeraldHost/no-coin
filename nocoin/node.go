@@ -122,9 +122,9 @@ func (node *Node) Process(input string) {
 
 func (node *Node) ProcessTransfer(txStr string) {
 	// Build TX from txStr
-	tx := TxFromString(txStr)
+	sig, tx := TxFromString(txStr)
 	// validate TX
-	if valid := tx.Validate(); valid {
+	if valid := tx.Validate(sig); valid {
 		tx.AddToMemPool()
 	}
 }

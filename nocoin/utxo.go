@@ -1,5 +1,9 @@
 package nocoin
 
+import (
+	"errors"
+)
+
 func AddToUtxoPool(utxo *Utxo) {
 	if _, ok := utxoPool[utxo.addr]; !ok {
 		utxoPool[utxo.addr] = make([]*Utxo, 0)
@@ -25,6 +29,16 @@ func FindInUtxoPoolSumValue(addr string, amount int) ([]*Utxo, int) {
 		result = append(result, utxo)
 	}
 	return result, sum
+}
+
+func FindOneInUtxoPool(addr string, amount int) (*Utxo, error) {
+	utxos := FindInUtxoPool(addr)
+	for _, utxo := range utxos {
+		if utxo.amount == amount {
+			return utxo, nil
+		}
+	}
+	return &Utxo{}, errors.New("utxo not found")
 }
 
 type Utxo struct {

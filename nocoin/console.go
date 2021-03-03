@@ -38,8 +38,8 @@ func StartConsole(node *Node) {
 	}
 }
 
-// Get your address and public key from file
-func myAddress() {
+// Get your address and public key from file22
+func myAddress() (string, string) {
 	addr := &Addr{}
 	addr.LoadFromFile()
 	return addr.PubKeyToHexStr(), addr.Get()
@@ -60,5 +60,5 @@ func transfer(mnemonics []string) string {
 	}
 	addr := mnemonics[2]
 	tx := NewTxTransfer(amount, addr)
-	return tx.String()
+	return tx.SignTx()
 }

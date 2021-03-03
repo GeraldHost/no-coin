@@ -5,17 +5,13 @@ import (
 	"bytes"
 )
 
+var txIdLength int = 64
+
 func TxPartsFromReader(r *bytes.Buffer) []*TxPart {
 	txParts := make([]*TxPart, 0)
 	count, _ := BytesToInt(r.Next(2))
 	for i := 0; i < int(count); i++ {
-		maybePrefix := r.Next(2)
-		var amount int64
-		if n, ok := varIntPrefixes[string(maybePrefix)]; ok {
-			amount, _ = BytesToInt(r.Next(n))
-		} else {
-			amount, _ = BytesToInt(maybePrefix)
-		}
+		amount := VarIntFromReader(r)
 		addr := string(r.Next(addrLength))
 		txPart := &TxPart{ amount: int(amount), addr: addr }
 		txParts = append(txParts, txPart)	
@@ -23,17 +19,23 @@ func TxPartsFromReader(r *bytes.Buffer) []*TxPart {
 	return txParts
 }
 
-func TxFromString(txStr string) *Tx {
+func TxFromString(txStr string) (string, *Tx) {
 	r := bytes.NewBuffer([]byte(txStr))
+	sigLen := VarIntFromReader(r)
+	sig := r.Next(int(sigLen))
+	txHash := r.Next(txIdLength)
+	pubKeyLen := VarIntFromReader(r)
+	pubKey := r.Next(int(pubKeyLen))
 	vin := TxPartsFromReader(r)
 	vout := TxPartsFromReader(r)
-	return &Tx { vin: vin, vout: vout }
+	return string(sig), &Tx { vin: vin, vout: vout, pubKeyStr: string(pubKey), id: string(txHash) }
 }
 
 // Return vin and vout for transaction
 // <vin> <amount><address>
 // <vout> <amount><address>
 func NewTxTransfer(amount int, addr string) *Tx {
+	pubKeyStr := myAddr.PubKeyToHexStr()
 	myAddrAddr := myAddr.Get()
 	vin := make([]*TxPart, 0)
 	vout := make([]*TxPart, 0)
@@ -51,14 +53,9 @@ func NewTxTransfer(amount int, addr string) *Tx {
 		vout = append(vout, &TxPart{ amount: change, addr: myAddrAddr })
 	}
 
-	tx := &Tx { vin: vin, vout: vout }
+	tx := &Tx { vin: vin, vout: vout, pubKeyStr: pubKeyStr }
 	return tx
 }
-
-// Take a byte array and generates a TX structure
-// shape of broadcast transaction is:
-// <sig><sender:pubkey><recv:addr><vin>
-// func GenerateTxFromBytes(bytes []byte) *Tx {}
 
 // There are three types of transaction:
 // - TX transfer
@@ -72,6 +69,9 @@ func NewTxTransfer(amount int, addr string) *Tx {
 // PAYLOAD:	[]<args>
 // fnRet:	<value> (format::json)
 type Tx struct {
+	// sha256 hash of the tx string
+	id string
+
 	// TX value input
 	vin []*TxPart
 
@@ -83,13 +83,16 @@ type Tx struct {
 
 	// Return value from function call
 	fnRet []byte
+
+	// public key of who is sending the transaction
+	pubKeyStr string
 }
 
 // Return the transaction hash which can be used to check validty when
 // we create our merkle tree.
 func (tx *Tx) Hash() string {
 	txStr := tx.String()
-	return fmt.Sprintf("%X", sha256.Sum256([]byte(txStr)))
+	return Sha256(txStr)
 }
 
 // All transactions are kept in a memory pool until they are ready
@@ -109,7 +112,8 @@ func (tx *Tx) RemoveFromMemPool() {
 }
 
 // TODO:
-func (tx *Tx) Validate() bool {
+func (tx *Tx) Validate(sig string) bool {
+	fmt.Println("Validate");
 	sum := func(txParts []*TxPart) int {
 		s := 0
 		for _, txP := range txParts {
@@ -121,11 +125,38 @@ func (tx *Tx) Validate() bool {
 	voutSum := sum(tx.vout)
 	if vinSum != voutSum {
 		// input does not equal output
+		fmt.Println("input does not equal output");
 		return false
 	}
+	fmt.Println("inputs are valid yay!");
+	fmt.Println("Checking utxo in pool");
+
+	// validate the sender actually owns the vin credits
+	// and that the vin credits are actually in the pool
+	senderAddr := Sha256(tx.pubKeyStr)
+	for _, txPart := range tx.vin {
+		if senderAddr != txPart.addr {
+			fmt.Println("vin addr does not match sender, sender can't send credits sender don't own")
+			return false
+		}
+		_, err := FindOneInUtxoPool(txPart.addr, txPart.amount)
+		if err != nil {
+			fmt.Println("vin isn't in utxo pool")
+			return false
+		}
+	}
+	fmt.Println("It's in teh utxo pool yay!");
 	// check utxo exist in pool
 	// validate sigs and pub keys
-	return false
+	fmt.Println("Validate sigs and pub keys");
+	// TODO: public key validation isn't working currently...
+	pubKey := hexStrToPubKey(tx.pubKeyStr)
+	if validSig := verifyPublicKey(pubKey, []byte(tx.id), []byte(sig)); !validSig {
+		fmt.Println("pub key not valid");
+		return false
+	}
+	fmt.Println("pub key is valid yay!");
+	return true
 }
 
 func (tx *Tx) String() string {
@@ -137,9 +168,19 @@ func (tx *Tx) String() string {
 	for _, txPart := range tx.vout {
 		voutBytes = append(voutBytes, []byte(txPart.String())...)
 	}
-	return EncodeVarInt(len(tx.vin)) + string(vinBytes) + EncodeVarInt(len(tx.vout)) + string(voutBytes)
+	
+	return EncodeVarInt(len(tx.pubKeyStr)) + tx.pubKeyStr + EncodeVarInt(len(tx.vin)) + string(vinBytes) + EncodeVarInt(len(tx.vout)) + string(voutBytes)
 }
 
+func (tx *Tx) SignTx() string {
+	txStr := tx.String()
+	tx.id = Sha256(txStr)
+	sig, err := myAddr.Sign([]byte(tx.id))
+	if err != nil {
+		fmt.Println("failed to sign tx")
+	}
+	return EncodeVarInt(len(string(sig))) + string(sig) + tx.id + txStr
+}
 
 type TxPart struct {
 	amount int

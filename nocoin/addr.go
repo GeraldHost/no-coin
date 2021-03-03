@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
@@ -62,8 +61,7 @@ func (addr *Addr) Get() string {
 // Convert hex encoded public key to SHA256 hash
 func (addr *Addr) PubKeyHash() string {
 	pubKeyStr := addr.PubKeyToHexStr()
-	hash := sha256.Sum256([]byte(pubKeyStr))
-	return fmt.Sprintf("%x", hash)
+	return Sha256(pubKeyStr)
 }
 
 func (addr *Addr) LoadFromFile() bool {
@@ -84,7 +82,7 @@ func (addr *Addr) LoadFromFile() bool {
 	return true
 }
 
-func (addr *Addr) Sign(hash [sha256.Size]byte) ([]byte, error) {
+func (addr *Addr) Sign(hash []byte) ([]byte, error) {
 	privateKey, _ := decodePem(addr.pem, addr.pemPub)
 	sig, err := ecdsa.SignASN1(rand.Reader, privateKey, hash[:])
 	return sig, err

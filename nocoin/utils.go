@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+    "crypto/sha256"
 )
 
 var (
@@ -22,6 +23,17 @@ var varIntPrefixes map[string]int = map[string]int{
 	string(varInt4BytePrefix):  4,
 	string(varInt8BytePrefix):  8,
 	string(varInt16BytePrefix): 16}
+
+func VarIntFromReader(r *bytes.Buffer) int64 {
+    maybePrefix := r.Next(2)
+    var num int64
+    if nBytes, ok := varIntPrefixes[string(maybePrefix)]; ok {
+        num, _ = BytesToInt(r.Next(nBytes))
+    } else {
+        num, _ = BytesToInt(maybePrefix)
+    }
+    return num
+}
 
 func DecodeVarInt(s string) (int64, int, error) {
 	b := []byte(s)
@@ -59,4 +71,9 @@ func EncodeVarInt(n int) string {
 // convery bytes to int
 func BytesToInt(b []byte) (int64, error) {
 	return strconv.ParseInt(string(b), 16, 64)
+}
+
+func Sha256(s string) string {
+    hash := sha256.Sum256([]byte(s))
+    return fmt.Sprintf("%x", hash)
 }
