@@ -107,10 +107,9 @@ func (node *Node) HandleConn(res http.ResponseWriter, req *http.Request) {
 }
 
 func (node *Node) Process(input string) {
-	fmt.Println("input", input)
 	mnemonics := strings.Split(input, " ")
 	action := mnemonics[0]
-	fmt.Printf("%srecieved: %s\n", TERMINAL_CLEAR_LINE, action)
+	fmt.Printf("recieved: %s\n", action)
 	switch action {
 	case "TRANSFER":
 		node.ProcessTransfer(mnemonics[1])
@@ -123,11 +122,17 @@ func (node *Node) Process(input string) {
 
 func (node *Node) ProcessTransfer(txStr string) {
 	// Build TX from txStr
+	fmt.Println("processing transfer")
 	sig, tx := TxFromString(txStr)
 	// validate TX
-	if valid := tx.Validate(sig); valid {
-		tx.AddToMemPool()
+	_, err := tx.Validate(sig)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	// add tx to memory pool
+	fmt.Println("added transaction to memory pool")
+	tx.AddToMemPool()
 }
 
 func (node *Node) Serve() {

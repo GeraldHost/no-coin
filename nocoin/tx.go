@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"bytes"
 	"encoding/hex"
+	"errors"
 )
 
 var txIdLength int = 64
@@ -99,6 +100,8 @@ func (tx *Tx) Hash() string {
 // All transactions are kept in a memory pool until they are ready
 // to be added to a block.
 func (tx *Tx) AddToMemPool() {
+	// TODO: we have to remove the inputs from the uxto pool 
+	// and put the outputs in the uxto pool
 	hash := tx.Hash()
 	txPool[hash] = tx
 }
@@ -112,9 +115,9 @@ func (tx *Tx) RemoveFromMemPool() {
 	}
 }
 
-// TODO:
-func (tx *Tx) Validate(sig string) bool {
-	fmt.Println("Validate");
+// Validate transaction, check utxo pool, check pub keys, check input
+// output values are equal, validate signature
+func (tx *Tx) Validate(sig string) (bool, error) {
 	sum := func(txParts []*TxPart) int {
 		s := 0
 		for _, txP := range txParts {
@@ -124,44 +127,28 @@ func (tx *Tx) Validate(sig string) bool {
 	}
 	vinSum := sum(tx.vin)
 	voutSum := sum(tx.vout)
-	fmt.Printf("in: %d, out: %d\n", vinSum, voutSum)
 	if vinSum != voutSum {
 		// input does not equal output
-		fmt.Println("input does not equal output");
-		fmt.Printf("in: %d, out: %d\n", vinSum, voutSum)
-		return false
+		return false, errors.New("input does not equal output")
 	}
-	fmt.Println("inputs are valid yay!");
-	fmt.Println("Checking utxo in pool");
-
 	// validate the sender actually owns the vin credits
 	// and that the vin credits are actually in the pool
 	senderAddr := Sha256(tx.pubKeyStr)
 	for _, txPart := range tx.vin {
 		if senderAddr != txPart.addr {
-			fmt.Println("vin addr does not match sender, sender can't send credits sender don't own")
-			return false
+			return false, errors.New("tx inout addr does not match sender, sender can't send credits sender does not own")
 		}
 		_, err := FindOneInUtxoPool(txPart.addr, txPart.amount)
 		if err != nil {
-			fmt.Println("vin isn't in utxo pool")
-			return false
+			return false, errors.New("tx input is not in utxo pool")
 		}
 	}
-	fmt.Println("It's in teh utxo pool yay!");
-	// check utxo exist in pool
-	// validate sigs and pub keys
-	fmt.Println("Validate sigs and pub keys");
-	// TODO: public key validation isn't working currently...
 	pubKey := hexStrToPubKey(tx.pubKeyStr)
-	fmt.Println("Pubkeystr", tx.pubKeyStr)
 	sigB, _ := hex.DecodeString(sig)
 	if validSig := verifyPublicKey(pubKey, []byte(tx.id), sigB); !validSig {
-		fmt.Println("pub key not valid");
-		return false
+		return false, errors.New("public key not valid");
 	}
-	fmt.Println("pub key is valid yay!");
-	return true
+	return true, nil
 }
 
 func (tx *Tx) String() string {
