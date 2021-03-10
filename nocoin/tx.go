@@ -1,10 +1,10 @@
 package nocoin
 
 import (
-	"fmt"
 	"bytes"
 	"encoding/hex"
 	"errors"
+	"fmt"
 )
 
 var txIdLength int = 64
@@ -15,8 +15,8 @@ func TxPartsFromReader(r *bytes.Buffer) []*TxPart {
 	for i := 0; i < int(count); i++ {
 		amount := VarIntFromReader(r)
 		addr := string(r.Next(addrLength))
-		txPart := &TxPart{ amount: int(amount), addr: addr }
-		txParts = append(txParts, txPart)	
+		txPart := &TxPart{amount: int(amount), addr: addr}
+		txParts = append(txParts, txPart)
 	}
 	return txParts
 }
@@ -30,7 +30,7 @@ func TxFromString(txStr string) (string, *Tx) {
 	pubKey := r.Next(int(pubKeyLen))
 	vin := TxPartsFromReader(r)
 	vout := TxPartsFromReader(r)
-	return string(sig), &Tx { vin: vin, vout: vout, pubKeyStr: string(pubKey), id: string(txHash) }
+	return string(sig), &Tx{vin: vin, vout: vout, pubKeyStr: string(pubKey), id: string(txHash)}
 }
 
 // Return vin and vout for transaction
@@ -44,18 +44,18 @@ func NewTxTransfer(amount int, addr string) *Tx {
 	// Build inputs
 	utxos, sum := FindInUtxoPoolSumValue(myAddrAddr, amount)
 	for _, utxo := range utxos {
-		vin = append(vin, &TxPart{ amount: utxo.amount, addr: utxo.addr })
+		vin = append(vin, &TxPart{amount: utxo.amount, addr: utxo.addr})
 	}
 	// append transfer to vout
-	vout = append(vout, &TxPart{ amount: amount, addr: addr });
+	vout = append(vout, &TxPart{amount: amount, addr: addr})
 	// check if change is required
 	if sum > amount {
 		// The sum of utxos is greater than the amount so we need some change
 		change := sum - amount
-		vout = append(vout, &TxPart{ amount: change, addr: myAddrAddr })
+		vout = append(vout, &TxPart{amount: change, addr: myAddrAddr})
 	}
 
-	tx := &Tx { vin: vin, vout: vout, pubKeyStr: pubKeyStr }
+	tx := &Tx{vin: vin, vout: vout, pubKeyStr: pubKeyStr}
 	return tx
 }
 
@@ -100,7 +100,7 @@ func (tx *Tx) Hash() string {
 // All transactions are kept in a memory pool until they are ready
 // to be added to a block.
 func (tx *Tx) AddToMemPool() {
-	// TODO: we have to remove the inputs from the uxto pool 
+	// TODO: we have to remove the inputs from the uxto pool
 	// and put the outputs in the uxto pool
 	hash := tx.Hash()
 	txPool[hash] = tx
@@ -118,19 +118,6 @@ func (tx *Tx) RemoveFromMemPool() {
 // Validate transaction, check utxo pool, check pub keys, check input
 // output values are equal, validate signature
 func (tx *Tx) Validate(sig string) (bool, error) {
-	sum := func(txParts []*TxPart) int {
-		s := 0
-		for _, txP := range txParts {
-			s += txP.amount
-		}
-		return s
-	}
-	vinSum := sum(tx.vin)
-	voutSum := sum(tx.vout)
-	if vinSum != voutSum {
-		// input does not equal output
-		return false, errors.New("input does not equal output")
-	}
 	// validate the sender actually owns the vin credits
 	// and that the vin credits are actually in the pool
 	senderAddr := Sha256(tx.pubKeyStr)
@@ -146,7 +133,7 @@ func (tx *Tx) Validate(sig string) (bool, error) {
 	pubKey := hexStrToPubKey(tx.pubKeyStr)
 	sigB, _ := hex.DecodeString(sig)
 	if validSig := verifyPublicKey(pubKey, []byte(tx.id), sigB); !validSig {
-		return false, errors.New("public key not valid");
+		return false, errors.New("public key not valid")
 	}
 	return true, nil
 }
@@ -160,7 +147,7 @@ func (tx *Tx) String() string {
 	for _, txPart := range tx.vout {
 		voutBytes = append(voutBytes, []byte(txPart.String())...)
 	}
-	
+
 	return EncodeVarInt(len(tx.pubKeyStr)) + tx.pubKeyStr + EncodeVarInt(len(tx.vin)) + string(vinBytes) + EncodeVarInt(len(tx.vout)) + string(voutBytes)
 }
 
@@ -177,7 +164,7 @@ func (tx *Tx) SignTx() string {
 
 type TxPart struct {
 	amount int
-	addr string
+	addr   string
 }
 
 func (txP *TxPart) String() string {
